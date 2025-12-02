@@ -1,0 +1,51 @@
+body {
+    background-color: #121212;
+    color: #e0e0e0;
+    font-family: 'Poppins', sans-serif;
+}
+
+.sidebar {
+    background-color: #1f1f1f;
+    min-height: 100vh;
+    border-right: 1px solid #333;
+}
+
+.sidebar-logo {
+    max-width: 80%;
+    display: block;
+    margin: 0 auto;
+}
+
+.sidebar .nav-link {
+    color: #ccc;
+    border-radius: 5px;
+    margin: 0 10px 5px 10px;
+    transition: all 0.2s ease-in-out;
+}
+
+.sidebar .nav-link:hover, .sidebar .nav-link.active {
+    color: #121212;
+    background-color: #ffc107;
+    transform: translateX(5px);
+}
+
+.sidebar .nav-link.text-danger:hover {
+    color: #fff;
+    background-color: #dc3545;
+}
+
+.content-area {
+    padding: 2rem;
+}
+
+.card {
+    background-color: #1f1f1f;
+    border: 1px solid #333;
+    border-radius: 10px;
+    color: #F5F5F5; /* Usamos F5F5F5 para un color más claro y visible */
+}
+
+/* Regla para asegurar que los datos en la tarjeta se vean claros */
+.card-body p, .card-body strong {
+    color: #F5F5F5 !important;
+}

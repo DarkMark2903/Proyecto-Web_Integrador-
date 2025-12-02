@@ -1,0 +1,15 @@
+/* Estilos para la página de Gestionar Ventas */
+
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: white;
+}
+
+.status-pendiente { background-color: #ffc107; color: #121212;}
+.status-pagado { background-color: #198754; }
+.status-enviado { background-color: #0dcaf0; color: #121212;}
+.status-entregado { background-color: #6c757d; }
+.status-cancelado { background-color: #dc3545; }

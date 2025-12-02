@@ -1,0 +1,65 @@
+.main-header {
+    background-color: #111111;
+    color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;   /* header un poco más alto */
+    position: relative;
+    z-index: 1000;
+}
+
+.main-header .logo {
+    flex: 1;
+    display: flex;
+    justify-content: center; 
+    align-items: center;    
+}
+
+.logo .logo-img {
+    max-width: 180px;  /* controla ancho máximo */
+    height: auto;
+}
+
+/* BOTONES DEL HEADER */
+.main-header .btn {
+    color: #ffffff;
+    font-size: 2.5rem;   /* íconos MUCHO más grandes */
+    padding: 10px;       /* más área de click */
+}
+
+.main-header .header-right i {
+    font-size: 2.5rem;   /* agranda los íconos de usuario, favoritos y carrito */
+}
+
+/* Contador del carrito más visible */
+.cart-counter {
+    font-size: 1rem;
+    padding: 2px 6px;
+}
+
+/* Menú hamburguesa */
+.hamburger-menu {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 70px;  /* bajamos un poco porque el header es más grande */
+    left: 0;
+    background-color: #212121;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.hamburger-menu a {
+    color: #fff;
+    text-decoration: none;
+    padding: 8px 0;
+}
+.hamburger-menu a:hover {
+    color: #ffc107;
+}
+
+.main-header .logo a {
+    display: flex;
+    align-items: center;
+}

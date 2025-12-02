@@ -1,0 +1,27 @@
+/* Estilos para la página de Mis Tarjetas */
+
+.card-placeholder {
+    background-color: transparent;
+    border: 2px dashed #444; /* Borde punteado para indicar que es un espacio vacío */
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease-in-out;
+}
+
+.card-placeholder:hover {
+    border-color: #ffc107; /* El borde cambia a color amarillo al pasar el mouse */
+    background-color: #1a1a1a;
+}
+
+.card-placeholder .card-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-placeholder p {
+    margin-bottom: 1.5rem;
+}

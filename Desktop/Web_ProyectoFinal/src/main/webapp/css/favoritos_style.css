@@ -1,0 +1,55 @@
+/* Estilos para la página de Mis Favoritos */
+
+/* Estilos para las tarjetas de producto (cuando haya) */
+.favorite-card {
+    background-color: #1f1f1f;
+    border: 1px solid #333;
+    border-radius: 10px;
+    color: #F5F5F5;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    overflow: hidden;
+}
+
+.favorite-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+
+.favorite-card .card-img-top {
+    border-bottom: 1px solid #333;
+}
+
+.favorite-card .card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.favorite-card .card-title {
+    font-size: 1rem;
+    font-weight: 500;
+    min-height: 40px;
+}
+
+.favorite-card .price {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #ffc107;
+    margin-bottom: 1rem;
+}
+
+.favorite-card .btn-outline-danger {
+    font-size: 0.8rem;
+}
+
+/* ESTILOS PARA LA TARJETA DE FAVORITOS VACÍA */
+.empty-favorites-card {
+    background-color: #1a1a1a !important;
+    border: 2px dashed #444;
+    color: #f5f5f5;
+}
+
+.empty-favorites-card .card-title {
+    color: #f5f5f5;
+    font-weight: 500;
+}

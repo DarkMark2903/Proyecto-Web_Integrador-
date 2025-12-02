@@ -1,0 +1,121 @@
+:root {
+    --sidebar-bg: #1f1f1f;
+    --main-bg: #121212;
+    --card-bg: #1f1f1f;
+    --text-color: #e0e0e0;
+    --text-muted-color: #888;
+    --border-color: #333;
+    --accent-color: #ffc107; /* Amarillo de tu marca */
+    
+    /* Colores para KPIs */
+    --kpi-1-bg: #0d6efd; /* Azul */
+    --kpi-2-bg: #198754; /* Verde */
+    --kpi-3-bg: #ffc107; /* Amarillo */
+    --kpi-4-bg: #6f42c1; /* Morado */
+}
+
+body {
+    background-color: var(--main-bg);
+    color: var(--text-color);
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+}
+
+.admin-layout {
+    display: flex;
+}
+
+/* --- Sidebar --- */
+.admin-sidebar {
+    width: 250px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--border-color);
+    padding-top: 1.5rem;
+    z-index: 100;
+}
+.sidebar-logo {
+    display: block;
+    margin: 0 auto 1.5rem auto;
+    max-width: 70%;
+}
+.admin-sidebar .nav-link {
+    color: var(--text-muted-color);
+    padding: 12px 25px;
+    font-size: 1rem;
+    transition: all 0.2s ease-in-out;
+}
+.admin-sidebar .nav-link:hover,
+.admin-sidebar .nav-link.active {
+    background-color: var(--accent-color);
+    color: #121212;
+    transform: translateX(5px);
+}
+.admin-sidebar .nav-link i {
+    font-size: 1.2rem;
+}
+
+/* --- Contenido Principal --- */
+.admin-main-content {
+    margin-left: 250px;
+    width: calc(100% - 250px);
+}
+.top-header {
+    background-color: var(--card-bg);
+    padding: 1rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+/* --- Tarjetas --- */
+.card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-color);
+}
+.card-header {
+    background-color: #2a2a2a;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 500;
+}
+
+/* --- Tarjetas KPI --- */
+.kpi-card {
+    color: white;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    border: none;
+}
+.kpi-card .card-body {
+    display: flex; justify-content: space-between; align-items: center;
+}
+.kpi-card .card-body i { font-size: 3rem; opacity: 0.3; }
+.kpi-card .card-footer {
+    background-color: rgba(0,0,0,0.2);
+    color: white; text-decoration: none; padding: 5px 15px; display: block;
+}
+.kpi-1 { background: linear-gradient(45deg, #0d6efd, #0a58ca); }
+.kpi-2 { background: linear-gradient(45deg, #198754, #146c43); }
+.kpi-3 { background: linear-gradient(45deg, #ffc107, #d39e00); }
+.kpi-4 { background: linear-gradient(45deg, #6f42c1, #59359a); }
+
+/* --- Lista de Clientes --- */
+.list-group-item {
+    background-color: transparent;
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+/* ================================================= */
+/* INICIO: CORRECCIÓN PARA EL TEXTO DE BIENVENIDA    */
+/* ================================================= */
+.admin-main-content .text-muted {
+    color: #f5f5f5 !important; /* Forzamos un color blanco humo */
+    opacity: 0.8; /* Le damos una opacidad ligera para que no sea tan brillante como el título */
+}
