@@ -5,18 +5,30 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class Conexion {
-    // FIX: Cambiamos UTC por America/Lima para que Java interprete bien la hora local
-    private static final String URL = "jdbc:mysql://localhost:3306/PeruvianStyleDB?useSSL=false&serverTimezone=America/Lima&characterEncoding=UTF-8&allowPublicKeyRetrieval=true";
-    private static final String USER = "root"; 
-    private static final String PASS = "mj123456789"; // Tu contraseña
+    private static Connection con;
 
     public static Connection getConnection() {
-        Connection con = null;
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            con = DriverManager.getConnection(URL, USER, PASS);
+            
+            // 1. Intentamos leer las credenciales de la Nube (Variables de Entorno)
+            String dbUrl = System.getenv("DB_URL");
+            String dbUser = System.getenv("DB_USER");
+            String dbPass = System.getenv("DB_PASSWORD");
+
+            if (dbUrl != null && dbUser != null && dbPass != null) {
+                // Si existen, estamos en Railway (o producción)
+                con = DriverManager.getConnection(dbUrl, dbUser, dbPass);
+            } else {
+                // 2. Si no existen, estamos en tu PC (Localhost)
+                // Ajusta aquí tu usuario/password local si es diferente a root/root
+                String urlLocal = "jdbc:mysql://localhost:3306/bd_proyecto?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+                con = DriverManager.getConnection(urlLocal, "root", "root");
+            }
+            
         } catch (ClassNotFoundException | SQLException e) {
-            System.err.println("Error al conectar a la BD: " + e.getMessage());
+            System.err.println("--- Error de Conexión en Conexion.java ---");
+            System.err.println("Mensaje: " + e.getMessage());
             e.printStackTrace();
         }
         return con;
