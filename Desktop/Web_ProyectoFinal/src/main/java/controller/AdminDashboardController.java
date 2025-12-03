@@ -3,6 +3,7 @@ package controller;
 import dao.ProductoDAO;
 import dao.PedidoDAO;
 import dao.UsuarioDAO;
+import model.Producto;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
@@ -26,32 +27,32 @@ public class AdminDashboardController extends HttpServlet {
             return;
         }
         
-        // Validar rol
         Usuario usuario = (Usuario) session.getAttribute("usuario");
         if (!"admin".equals(usuario.getRol()) && !"empleado".equals(usuario.getRol())) {
             response.sendRedirect(request.getContextPath() + "/index.jsp");
             return;
         }
         
-        // 1. Obtener KPIs principales
+        // 1. KPIs
         int productosDisponibles = productoDAO.contarActivos();
         int ventasHoy = pedidoDAO.contarVentasHoy();
         int clientesRegistrados = usuarioDAO.contarClientesActivos();
         double ingresosHoy = pedidoDAO.calcularIngresosHoy();
         
-        // 2. Obtener datos para la tabla de clientes recientes
+        // 2. Tablas y Gráficos
         List<Usuario> clientesRecientes = usuarioDAO.obtenerClientesRecientes15Dias();
-        
-        // 3. Obtener datos para el GRÁFICO (Ventas últimos 7 días)
         List<Double> ventas7Dias = pedidoDAO.obtenerVentasUltimos7Dias();
         
-        // 4. Enviar todo al JSP
+        // 3. Top Productos Vendidos (HISTÓRICO TOTAL, límite 5)
+        List<Producto> productosTop = pedidoDAO.obtenerTopProductosVendidos(5);
+        
         request.setAttribute("kpiProductos", productosDisponibles);
         request.setAttribute("kpiVentas", ventasHoy);
         request.setAttribute("kpiClientes", clientesRegistrados);
         request.setAttribute("kpiIngresos", ingresosHoy);
         request.setAttribute("clientesRecientes", clientesRecientes);
-        request.setAttribute("ventas7Dias", ventas7Dias); // Datos dinámicos para el gráfico
+        request.setAttribute("ventas7Dias", ventas7Dias);
+        request.setAttribute("productosTop", productosTop);
         
         request.getRequestDispatcher("/administrador/admin_dashboard.jsp").forward(request, response);
     }

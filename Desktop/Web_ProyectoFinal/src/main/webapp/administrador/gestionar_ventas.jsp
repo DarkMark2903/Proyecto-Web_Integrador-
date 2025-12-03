@@ -40,7 +40,16 @@
                 <div class="card">
                     <div class="card-body">
                         <table class="table table-dark table-hover align-middle">
-                            <thead><tr><th>ID Pedido</th><th>Cliente</th><th>Fecha</th><th>Total</th><th>Estado</th><th class="text-end">Acciones</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th>ID Pedido</th>
+                                    <th>Cliente</th>
+                                    <th>Fecha</th>
+                                    <th>Total</th>
+                                    <th>Estado</th>
+                                    <th class="text-end">Acciones</th>
+                                </tr>
+                            </thead>
                             <tbody>
                                 <c:choose>
                                     <c:when test="${not empty listaPedidos}">
@@ -48,6 +57,7 @@
                                             <tr>
                                                 <td>#${pedido.id_pedido}</td>
                                                 <td>${pedido.nombreCliente}</td>
+                                                <%-- FECHA CORREGIDA: Se muestra tal cual viene de BD --%>
                                                 <td><fmt:formatDate value="${pedido.fecha_pedido}" pattern="dd/MM/yyyy HH:mm" /></td>
                                                 <td class="fw-bold text-warning">S/ <fmt:formatNumber value="${pedido.total}" pattern="#0.00" /></td>
                                                 <td><span class="badge ${pedido.estado == 'pagado' ? 'bg-success' : 'bg-secondary'} text-uppercase">${pedido.estado}</span></td>
@@ -58,7 +68,11 @@
                                                     <div class="modal-content" style="background-color: #2b2b2b; color: #fff;">
                                                         <div class="modal-header border-bottom-0"><h5 class="modal-title text-warning">Detalle del Pedido #${pedido.id_pedido}</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
                                                         <div class="modal-body">
-                                                            <div class="row mb-3"><div class="col-md-6"><p><strong>Cliente:</strong> ${pedido.nombreCliente}</p></div><div class="col-md-6 text-end"><p><strong>Fecha:</strong> <fmt:formatDate value="${pedido.fecha_pedido}" pattern="dd/MM/yyyy HH:mm" /></p></div></div>
+                                                            <div class="row mb-3">
+                                                                <div class="col-md-6"><p><strong>Cliente:</strong> ${pedido.nombreCliente}</p></div>
+                                                                <%-- FECHA EN MODAL CORREGIDA --%>
+                                                                <div class="col-md-6 text-end"><p><strong>Fecha:</strong> <fmt:formatDate value="${pedido.fecha_pedido}" pattern="dd/MM/yyyy HH:mm" /></p></div>
+                                                            </div>
                                                             <h6 class="border-bottom border-secondary pb-2 mb-3">Productos:</h6>
                                                             <div class="list-group mb-3">
                                                                 <c:set var="subtotalCalc" value="0" />

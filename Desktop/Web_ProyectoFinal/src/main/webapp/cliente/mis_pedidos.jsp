@@ -38,6 +38,7 @@
                                         <c:forEach var="pedido" items="${pedidos}">
                                             <tr>
                                                 <td>#${pedido.id_pedido}</td>
+                                                <%-- FECHA CORREGIDA --%>
                                                 <td><fmt:formatDate value="${pedido.fecha_pedido}" pattern="dd/MM/yyyy HH:mm" /></td>
                                                 <td class="fw-bold">S/ <fmt:formatNumber value="${pedido.total}" pattern="#0.00" /></td>
                                                 <td><span class="badge bg-warning text-dark text-uppercase">${pedido.estado}</span></td>
@@ -48,6 +49,7 @@
                                                     <div class="modal-content bg-dark text-white">
                                                         <div class="modal-header border-bottom-0"><h5 class="modal-title text-warning">Detalle del Pedido #${pedido.id_pedido}</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
                                                         <div class="modal-body">
+                                                            <%-- FECHA EN MODAL CORREGIDA --%>
                                                             <p class="small text-muted mb-3">Fecha: <fmt:formatDate value="${pedido.fecha_pedido}" pattern="dd/MM/yyyy HH:mm" /></p>
                                                             <div class="list-group">
                                                                 <c:forEach var="item" items="${pedido.detalles}">

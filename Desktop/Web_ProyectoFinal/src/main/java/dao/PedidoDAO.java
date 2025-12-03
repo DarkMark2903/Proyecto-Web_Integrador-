@@ -4,6 +4,7 @@ import config.Conexion;
 import model.Pedido;
 import model.DetallePedido;
 import model.CarritoItem;
+import model.Producto;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,9 +32,7 @@ public class PedidoDAO {
                     pedidos.add(p);
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
         return pedidos;
     }
     
@@ -58,9 +57,7 @@ public class PedidoDAO {
                     detalles.add(dp);
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
         return detalles;
     }
 
@@ -80,13 +77,12 @@ public class PedidoDAO {
                 p.setNombreCliente(rs.getString("nombre") + " " + rs.getString("apellido"));
                 pedidos.add(p);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
         return pedidos;
     }
 
     // --- MÉTODOS DASHBOARD ---
+    
     public double calcularIngresosTotales() {
         double total = 0.0;
         String sql = "SELECT SUM(total) as ingresos FROM Pedidos WHERE estado != 'cancelado'";
@@ -94,6 +90,7 @@ public class PedidoDAO {
             if (rs.next()) { total = rs.getDouble("ingresos"); }
         } catch (Exception e) { e.printStackTrace(); } return total;
     }
+
     public int contarVentasTotales() {
         int total = 0;
         String sql = "SELECT COUNT(id_pedido) as total FROM Pedidos WHERE estado != 'cancelado'";
@@ -101,6 +98,7 @@ public class PedidoDAO {
             if (rs.next()) { total = rs.getInt("total"); }
         } catch (Exception e) { e.printStackTrace(); } return total;
     }
+
     public int contarClientesUnicos() {
         int total = 0;
         String sql = "SELECT COUNT(DISTINCT id_usuario) as total FROM Pedidos";
@@ -108,13 +106,28 @@ public class PedidoDAO {
             if (rs.next()) { total = rs.getInt("total"); }
         } catch (Exception e) { e.printStackTrace(); } return total;
     }
+
     public List<Double> obtenerVentasUltimos7Dias() {
         List<Double> ventasDiarias = new ArrayList<>(Collections.nCopies(7, 0.0));
-        String sql = "SELECT DAYOFWEEK(fecha_pedido) as dia_semana, SUM(total) as total_dia FROM Pedidos WHERE fecha_pedido >= CURDATE() - INTERVAL 6 DAY AND estado != 'cancelado' GROUP BY DAYOFWEEK(fecha_pedido)";
-        try (Connection con = Conexion.getConnection(); PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) { int dia = rs.getInt("dia_semana"); ventasDiarias.set(dia - 1, rs.getDouble("total_dia")); }
-        } catch (Exception e) { e.printStackTrace(); } return ventasDiarias;
+        String sql = "SELECT DAYOFWEEK(fecha_pedido) as dia_semana, SUM(total) as total_dia " +
+                     "FROM Pedidos " +
+                     "WHERE fecha_pedido >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) " + 
+                     "AND estado != 'cancelado' " +
+                     "GROUP BY dia_semana";
+        
+        try (Connection con = Conexion.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                int dia = rs.getInt("dia_semana");
+                if (dia >= 1 && dia <= 7) {
+                    ventasDiarias.set(dia - 1, rs.getDouble("total_dia"));
+                }
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return ventasDiarias;
     }
+
     public int contarVentasHoy() {
         int total = 0;
         String sql = "SELECT COUNT(id_pedido) as total FROM Pedidos WHERE DATE(fecha_pedido) = CURDATE() AND estado != 'cancelado'";
@@ -122,6 +135,7 @@ public class PedidoDAO {
             if (rs.next()) { total = rs.getInt("total"); }
         } catch (Exception e) { e.printStackTrace(); } return total;
     }
+
     public double calcularIngresosHoy() {
         double total = 0.0;
         String sql = "SELECT SUM(total) as ingresos FROM Pedidos WHERE DATE(fecha_pedido) = CURDATE() AND estado != 'cancelado'";
@@ -130,13 +144,68 @@ public class PedidoDAO {
         } catch (Exception e) { e.printStackTrace(); } return total;
     }
     
-    // --- MÉTODO TRANSACCIONAL (ACTUALIZADO PARA DESACTIVAR PRODUCTOS) ---
+    // --- MÉTODO MEJORADO: TOP PRODUCTOS CON ESTRATEGIA DE RESPALDO ---
+    public List<Producto> obtenerTopProductosVendidos(int limite) {
+        List<Producto> productos = new ArrayList<>();
+        
+        // 1. Intentar obtener por historial de ventas (Ranking Real)
+        String sqlVentas = "SELECT p.id_producto, p.nombre, p.precio, p.imagen, p.descripcion, p.stock, SUM(dp.cantidad) as total_vendido " +
+                     "FROM detalle_pedido dp " +
+                     "JOIN pedidos ped ON dp.id_pedido = ped.id_pedido " +
+                     "JOIN productos p ON dp.id_producto = p.id_producto " +
+                     "WHERE ped.estado != 'cancelado' " +
+                     "GROUP BY p.id_producto " +
+                     "ORDER BY total_vendido DESC " +
+                     "LIMIT ?";
+        
+        try (Connection con = Conexion.getConnection();
+             PreparedStatement ps = con.prepareStatement(sqlVentas)) {
+            ps.setInt(1, limite);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    productos.add(mapRowToProductoSimple(rs));
+                }
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+
+        // 2. FALLBACK: Si no hay ventas (lista vacía), cargar los productos más recientes
+        // Esto evita que el inicio.jsp salga vacío
+        if (productos.isEmpty()) {
+            String sqlRecientes = "SELECT * FROM productos WHERE estado = 'activo' ORDER BY id_producto DESC LIMIT ?";
+            try (Connection con = Conexion.getConnection();
+                 PreparedStatement ps = con.prepareStatement(sqlRecientes)) {
+                ps.setInt(1, limite);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        productos.add(mapRowToProductoSimple(rs));
+                    }
+                }
+            } catch (Exception e) { e.printStackTrace(); }
+        }
+        
+        return productos;
+    }
+
+    // Helper para mapear ResultSet a Producto (evitando duplicidad y errores de nulos)
+    private Producto mapRowToProductoSimple(ResultSet rs) throws SQLException {
+        Producto p = new Producto();
+        p.setId_producto(rs.getInt("id_producto"));
+        p.setNombre(rs.getString("nombre"));
+        p.setPrecio(rs.getBigDecimal("precio"));
+        p.setImagen(rs.getString("imagen"));
+        // Manejo seguro de null para descripción
+        String desc = rs.getString("descripcion");
+        p.setDescripcion(desc != null ? desc : "");
+        p.setStock(rs.getInt("stock"));
+        return p;
+    }
+
+    // --- MÉTODO TRANSACCIONAL ---
     public boolean crearPedido(Pedido pedido, List<CarritoItem> items, String direccionEnvio, String metodoPago) {
         String INSERT_DIRECCION = "INSERT INTO direcciones (id_usuario, direccion, tipo, pais) VALUES (?, ?, 'envio', 'Perú')";
         String INSERT_PEDIDO = "INSERT INTO pedidos (id_usuario, id_direccion, estado, total) VALUES (?, ?, ?, ?)";
         String INSERT_DETALLE = "INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario) VALUES (?, ?, ?, ?)";
         String UPDATE_STOCK = "UPDATE productos SET stock = stock - ? WHERE id_producto = ? AND stock >= ?"; 
-        // NUEVA QUERY: Desactiva el producto si el stock quedó en 0
         String DEACTIVATE_PRODUCT = "UPDATE productos SET estado = 'inactivo' WHERE id_producto = ? AND stock = 0";
         String INSERT_PAGO = "INSERT INTO pagos (id_pedido, metodo_pago, monto, estado_pago) VALUES (?, ?, ?, ?)";
 
@@ -148,17 +217,13 @@ public class PedidoDAO {
             con = Conexion.getConnection();
             con.setAutoCommit(false);
             
-            // 1. Dirección
             psDir = con.prepareStatement(INSERT_DIRECCION, Statement.RETURN_GENERATED_KEYS);
             psDir.setInt(1, pedido.getId_usuario());
             psDir.setString(2, direccionEnvio);
             psDir.executeUpdate();
             rsDir = psDir.getGeneratedKeys();
-            int idDireccionGenerada = 0;
-            if (rsDir.next()) idDireccionGenerada = rsDir.getInt(1);
-            else throw new SQLException("No se pudo registrar la dirección de envío.");
+            int idDireccionGenerada = (rsDir.next()) ? rsDir.getInt(1) : 0;
 
-            // 2. Pedido
             psPedido = con.prepareStatement(INSERT_PEDIDO, Statement.RETURN_GENERATED_KEYS);
             psPedido.setInt(1, pedido.getId_usuario());
             psPedido.setInt(2, idDireccionGenerada);
@@ -166,11 +231,9 @@ public class PedidoDAO {
             psPedido.setBigDecimal(4, pedido.getTotal());
             psPedido.executeUpdate();
             rsPed = psPedido.getGeneratedKeys();
-            int idPedido = 0;
-            if (rsPed.next()) { idPedido = rsPed.getInt(1); pedido.setId_pedido(idPedido); }
-            else throw new SQLException("No se pudo generar el ID del pedido.");
+            int idPedido = (rsPed.next()) ? rsPed.getInt(1) : 0;
+            pedido.setId_pedido(idPedido);
             
-            // 3. Detalles y Stock
             psDetalle = con.prepareStatement(INSERT_DETALLE);
             psStock = con.prepareStatement(UPDATE_STOCK);
             psDeactivate = con.prepareStatement(DEACTIVATE_PRODUCT);
@@ -179,17 +242,14 @@ public class PedidoDAO {
                 int idProducto = item.getProducto().getId_producto();
                 int cantidad = item.getCantidad();
 
-                // Actualizar stock
                 psStock.setInt(1, cantidad);
                 psStock.setInt(2, idProducto);
                 psStock.setInt(3, cantidad);
                 if (psStock.executeUpdate() == 0) throw new SQLException("Stock insuficiente para el producto ID: " + idProducto);
 
-                // Verificar si quedó en 0 y desactivar
                 psDeactivate.setInt(1, idProducto);
-                psDeactivate.executeUpdate(); // Si no está en 0, no pasa nada
+                psDeactivate.executeUpdate();
 
-                // Insertar detalle
                 psDetalle.setInt(1, idPedido);
                 psDetalle.setInt(2, idProducto);
                 psDetalle.setInt(3, cantidad);
@@ -198,7 +258,6 @@ public class PedidoDAO {
             }
             psDetalle.executeBatch();
 
-            // 4. Pago
             psPago = con.prepareStatement(INSERT_PAGO);
             psPago.setInt(1, idPedido);
             psPago.setString(2, metodoPago);
@@ -210,7 +269,7 @@ public class PedidoDAO {
             return true;
         } catch (SQLException e) {
             try { if (con != null) con.rollback(); } catch (SQLException ex) { }
-            System.err.println("Error pedido: " + e.getMessage());
+            e.printStackTrace();
             return false;
         } finally {
             try {

@@ -20,9 +20,15 @@ public class AgregarAlCarritoController extends HttpServlet {
             throws ServletException, IOException {
         
         HttpSession session = request.getSession();
+        
+        if (request.getParameter("idProducto") == null) {
+            response.sendRedirect(request.getContextPath() + "/catalogo");
+            return;
+        }
+
         int idProducto = Integer.parseInt(request.getParameter("idProducto"));
         int cantidad = Integer.parseInt(request.getParameter("cantidad"));
-        String origen = request.getParameter("origen"); // "catalogo" o "detalle"
+        String origen = request.getParameter("origen"); // "catalogo", "detalle", "inicio"
         
         Producto producto = productoDAO.obtenerPorId(idProducto);
         
@@ -35,12 +41,9 @@ public class AgregarAlCarritoController extends HttpServlet {
             boolean encontrado = false;
             for (CarritoItem item : carrito) {
                 if (item.getProducto().getId_producto() == idProducto) {
-                    // Validar Stock antes de sumar
                     if (item.getCantidad() + cantidad <= producto.getStock()) {
                         item.setCantidad(item.getCantidad() + cantidad);
-                        // NO SE MUESTRA MENSAJE DE ÉXITO
                     } else {
-                        // SOLO mostramos error si estamos en el detalle del producto
                         if ("detalle".equals(origen)) {
                             session.setAttribute("error", "No puedes añadir más. Stock disponible: " + producto.getStock());
                         }
@@ -53,7 +56,6 @@ public class AgregarAlCarritoController extends HttpServlet {
             if (!encontrado) {
                 if (cantidad <= producto.getStock()) {
                     carrito.add(new CarritoItem(producto, cantidad));
-                    // NO SE MUESTRA MENSAJE DE ÉXITO (Suficiente con el contador del header)
                 } else {
                      if ("detalle".equals(origen)) {
                         session.setAttribute("error", "Stock insuficiente.");
@@ -62,22 +64,16 @@ public class AgregarAlCarritoController extends HttpServlet {
             }
             
             session.setAttribute("carrito", carrito);
-            
-            // Actualizar contador para el header
             int totalItems = 0;
             for (CarritoItem item : carrito) totalItems += item.getCantidad();
             session.setAttribute("carritoContador", totalItems);
-            
-            // Recalcular total monetario para el carrito
-            // (Lógica simplificada, idealmente en un servicio compartido)
-            java.math.BigDecimal total = java.math.BigDecimal.ZERO;
-            for(CarritoItem i : carrito) total = total.add(i.getSubtotal());
-            session.setAttribute("carritoTotal", total);
         }
         
-        // Redireccionar según origen
+        // LÓGICA DE REDIRECCIÓN
         if ("detalle".equals(origen)) {
             response.sendRedirect(request.getContextPath() + "/detalle_producto?id=" + idProducto);
+        } else if ("inicio".equals(origen)) {
+            response.sendRedirect(request.getContextPath() + "/inicio");
         } else {
             response.sendRedirect(request.getContextPath() + "/catalogo");
         }
