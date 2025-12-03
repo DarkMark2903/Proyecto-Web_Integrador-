@@ -6,7 +6,8 @@
             <div class="col-md-3 col-lg-3 col-xl-3 mx-auto mb-4">
                 <h5 class="text-uppercase fw-bold mb-4 text-warning">Peruvian&Style</h5>
                 <p>
-                    La tienda líder en moda y accesorios. Ofreciendo calidad, estilo y elegancia en cada compra.
+                    La tienda líder en moda y accesorios.
+                    Ofreciendo calidad, estilo y elegancia en cada compra.
                 </p>
             </div>
 
@@ -37,9 +38,9 @@
             <div class="col-md-3 col-lg-4 col-xl-3 mx-auto mb-4">
                 <h6 class="text-uppercase fw-bold mb-4 text-warning">Boletín</h6>
                 <p>Suscríbete para recibir nuestras últimas ofertas.</p>
-                <form>
+                <form id="formBoletin" onsubmit="mostrarModalBoletin(event)">
                     <div class="mb-2">
-                        <input type="email" class="form-control bg-secondary border-0 text-white" placeholder="Tu correo">
+                        <input type="email" class="form-control bg-secondary border-0 text-white" placeholder="Tu correo" required>
                     </div>
                     <button type="submit" class="btn btn-warning w-100 fw-bold">Suscribirse</button>
                 </form>
@@ -64,5 +65,38 @@
         .footer-icon i {
             transition: color 0.3s;
         }
+        /* Animación para el modal del footer */
+        .zoom-in-modal {
+            animation: zoomIn 0.5s;
+        }
+        @keyframes zoomIn {
+            from { opacity: 0; transform: scale(0.5); }
+            to { opacity: 1; transform: scale(1); }
+        }
     </style>
+
+    <div class="modal fade" id="modalBoletinSuccess" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content bg-white text-dark border-warning">
+                <div class="modal-body text-center p-4">
+                    <i class="bi bi-envelope-check-fill text-warning display-3 zoom-in-modal d-block mb-3"></i>
+                    <h5 class="fw-bold mb-2">¡Suscrito!</h5>
+                    <p class="small text-muted">Gracias por suscribirse a nuestro boletín.</p>
+                    <button type="button" class="btn btn-dark btn-sm w-100" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function mostrarModalBoletin(event) {
+            event.preventDefault(); // Evita recarga inmediata
+            // Usamos Bootstrap ya cargado en la página principal
+            const modalBoletin = new bootstrap.Modal(document.getElementById('modalBoletinSuccess'));
+            modalBoletin.show();
+            
+            // Limpiar campo
+            document.getElementById('formBoletin').reset();
+        }
+    </script>
 </footer>

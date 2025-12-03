@@ -172,13 +172,14 @@
                                                     data-id="${cat.id_categoria}" data-nombre="${cat.nombre_categoria}" data-desc="${cat.descripcion}">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
-                                            <form action="${pageContext.request.contextPath}/admin/gestionar-productos" method="post" class="d-inline">
-                                                <input type="hidden" name="action" value="delete_category">
-                                                <input type="hidden" name="idCategoria" value="${cat.id_categoria}">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar categoría? Esto fallará si tiene productos.')">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
+                                            
+                                            <%-- CAMBIO AQUÍ: Botón que abre el modal en lugar del confirm() --%>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#eliminarCategoriaModal"
+                                                    data-id="${cat.id_categoria}">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
                                         </td>
                                     </tr>
                                 </c:forEach>
@@ -202,6 +203,32 @@
                         <div class="mb-2"><input type="text" class="form-control bg-dark text-white" id="edit-cat-nombre" name="nombreCat" required></div>
                         <div class="mb-2"><textarea class="form-control bg-dark text-white" id="edit-cat-desc" name="descCat" rows="2"></textarea></div>
                         <button type="submit" class="btn btn-info w-100 btn-sm">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <%-- NUEVO: SUB-MODAL ELIMINAR CATEGORÍA --%>
+    <div class="modal fade" id="eliminarCategoriaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background-color: #2b2b2b; border: 1px solid #555; color: white;">
+                <form action="${pageContext.request.contextPath}/admin/gestionar-productos" method="post">
+                    <input type="hidden" name="action" value="delete_category">
+                    <input type="hidden" name="idCategoria" id="delete-cat-id">
+                    <div class="modal-header border-bottom-0">
+                        <h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Eliminar Categoría</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <p class="fs-5">¿Seguro que deseas eliminar esta categoría?</p>
+                        <div class="alert alert-warning small border-0 text-dark">
+                            <i class="bi bi-info-circle-fill me-1"></i> Si la categoría tiene productos asociados, no se podrá eliminar.
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0 justify-content-center">
+                        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger px-4 fw-bold">Sí, Eliminar</button>
                     </div>
                 </form>
             </div>
@@ -280,6 +307,7 @@
                     document.getElementById('edit-imagen').value = button.getAttribute('data-imagen');
                 });
             }
+            
             // Lógica para modal editar categoría
             const editarCategoriaModal = document.getElementById('editarCategoriaModal');
             if (editarCategoriaModal) {
@@ -288,12 +316,19 @@
                     document.getElementById('edit-cat-id').value = button.getAttribute('data-id');
                     document.getElementById('edit-cat-nombre').value = button.getAttribute('data-nombre');
                     document.getElementById('edit-cat-desc').value = button.getAttribute('data-desc');
-                    
-                    // Cierra el modal padre para evitar backdrop doble (opcional, pero recomendado)
-                    // const gestCatModal = bootstrap.Modal.getInstance(document.getElementById('gestionarCategoriasModal'));
-                    // gestCatModal.hide();
                 });
             }
+            
+            // Lógica para modal eliminar categoría (NUEVO)
+            const eliminarCategoriaModal = document.getElementById('eliminarCategoriaModal');
+            if (eliminarCategoriaModal) {
+                eliminarCategoriaModal.addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    const idCategoria = button.getAttribute('data-id');
+                    document.getElementById('delete-cat-id').value = idCategoria;
+                });
+            }
+
             const eliminarProductoModal = document.getElementById('eliminarProductoModal');
             if (eliminarProductoModal) {
                 eliminarProductoModal.addEventListener('show.bs.modal', function (event) {

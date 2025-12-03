@@ -54,13 +54,16 @@
                                 <c:choose>
                                     <c:when test="${not empty listaPedidos}">
                                         <c:forEach var="pedido" items="${listaPedidos}">
-                                            <tr>
+                                        <tr>
                                                 <td>#${pedido.id_pedido}</td>
                                                 <td>${pedido.nombreCliente}</td>
-                                                <%-- FECHA CORREGIDA: Se muestra tal cual viene de BD --%>
                                                 <td><fmt:formatDate value="${pedido.fecha_pedido}" pattern="dd/MM/yyyy HH:mm" /></td>
                                                 <td class="fw-bold text-warning">S/ <fmt:formatNumber value="${pedido.total}" pattern="#0.00" /></td>
-                                                <td><span class="badge ${pedido.estado == 'pagado' ? 'bg-success' : 'bg-secondary'} text-uppercase">${pedido.estado}</span></td>
+                                                <td>
+                                                    <span class="badge ${pedido.estado == 'pagado' ? 'bg-success' : (pedido.estado == 'cancelado' ? 'bg-danger' : 'bg-warning text-dark')} text-uppercase">
+                                                        ${pedido.estado}
+                                                    </span>
+                                                </td>
                                                 <td class="text-end"><button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalVenta${pedido.id_pedido}"><i class="bi bi-eye"></i> Ver Detalle</button></td>
                                             </tr>
                                             <div class="modal fade text-dark" id="modalVenta${pedido.id_pedido}" tabindex="-1" aria-hidden="true">
@@ -70,7 +73,6 @@
                                                         <div class="modal-body">
                                                             <div class="row mb-3">
                                                                 <div class="col-md-6"><p><strong>Cliente:</strong> ${pedido.nombreCliente}</p></div>
-                                                                <%-- FECHA EN MODAL CORREGIDA --%>
                                                                 <div class="col-md-6 text-end"><p><strong>Fecha:</strong> <fmt:formatDate value="${pedido.fecha_pedido}" pattern="dd/MM/yyyy HH:mm" /></p></div>
                                                             </div>
                                                             <h6 class="border-bottom border-secondary pb-2 mb-3">Productos:</h6>
@@ -93,6 +95,17 @@
                                                                 <div class="d-flex justify-content-between small text-muted"><span>Envío:</span><span>S/ 15.00</span></div>
                                                                 <div class="d-flex justify-content-between mt-2"><h4 class="text-warning fw-bold">Total Pagado:</h4><h4 class="text-warning fw-bold">S/ <fmt:formatNumber value="${pedido.total}" pattern="#0.00" /></h4></div>
                                                             </div>
+                                                            
+                                                            <%-- FORMULARIO PARA CAMBIAR ESTADO --%>
+                                                            <c:if test="${pedido.estado != 'pagado' && pedido.estado != 'cancelado'}">
+                                                                <hr class="border-secondary mt-3">
+                                                                <form action="${pageContext.request.contextPath}/admin/gestionar-ventas" method="POST" class="d-flex justify-content-end align-items-center">
+                                                                    <label class="me-2 text-warning">Acción:</label>
+                                                                    <input type="hidden" name="idPedido" value="${pedido.id_pedido}">
+                                                                    <input type="hidden" name="accion" value="confirmarPago">
+                                                                    <button type="submit" class="btn btn-success fw-bold"><i class="bi bi-check-circle-fill me-2"></i>Marcar como Pagado</button>
+                                                                </form>
+                                                            </c:if>
                                                         </div>
                                                         <div class="modal-footer border-top-0"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button></div>
                                                     </div>

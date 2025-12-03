@@ -15,7 +15,6 @@ public class CarritoController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        // LÓGICA DE CÁLCULO AL ENTRAR AL CARRITO
         HttpSession session = request.getSession();
         List<CarritoItem> carrito = (List<CarritoItem>) session.getAttribute("carrito");
         
@@ -26,9 +25,7 @@ public class CarritoController extends HttpServlet {
             }
         }
         
-        // Enviamos el total como atributo de request para que el JSP lo use en el cálculo
         request.setAttribute("carritoTotal", total);
-        
         request.getRequestDispatcher("/carrito.jsp").forward(request, response);
     }
 
@@ -38,24 +35,49 @@ public class CarritoController extends HttpServlet {
         
         HttpSession session = request.getSession();
         String accion = request.getParameter("accion");
+        List<CarritoItem> carrito = (List<CarritoItem>) session.getAttribute("carrito");
         
-        if ("eliminar".equals(accion)) {
-            int idProducto = Integer.parseInt(request.getParameter("idProducto"));
-            List<CarritoItem> carrito = (List<CarritoItem>) session.getAttribute("carrito");
-            
-            if (carrito != null) {
-                carrito.removeIf(item -> item.getProducto().getId_producto() == idProducto);
+        if (carrito != null && accion != null) {
+            try {
+                int idProducto = Integer.parseInt(request.getParameter("idProducto"));
+                
+                // Buscar el item
+                CarritoItem itemSeleccionado = null;
+                for (CarritoItem item : carrito) {
+                    if (item.getProducto().getId_producto() == idProducto) {
+                        itemSeleccionado = item;
+                        break;
+                    }
+                }
+
+                if (itemSeleccionado != null) {
+                    if ("eliminar".equals(accion)) {
+                        carrito.remove(itemSeleccionado);
+                    } else if ("aumentar".equals(accion)) {
+                        // Validar stock antes de aumentar
+                        if (itemSeleccionado.getCantidad() < itemSeleccionado.getProducto().getStock()) {
+                            itemSeleccionado.setCantidad(itemSeleccionado.getCantidad() + 1);
+                        } else {
+                            session.setAttribute("error", "No hay más stock disponible para " + itemSeleccionado.getProducto().getNombre());
+                        }
+                    } else if ("disminuir".equals(accion)) {
+                        if (itemSeleccionado.getCantidad() > 1) {
+                            itemSeleccionado.setCantidad(itemSeleccionado.getCantidad() - 1);
+                        }
+                    }
+                }
+
                 session.setAttribute("carrito", carrito);
                 
-                // Actualizar contador
+                // Recalcular contador total
                 int totalItems = 0;
                 for (CarritoItem item : carrito) {
                     totalItems += item.getCantidad();
                 }
                 session.setAttribute("carritoContador", totalItems);
                 
-                // No necesitamos calcular el total aquí para guardarlo en sesión si el doGet lo hace,
-                // pero para mantener coherencia inmediata al redirigir, está bien que el doGet lo recalcule.
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
             }
         }
         
