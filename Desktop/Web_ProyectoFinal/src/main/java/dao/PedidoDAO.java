@@ -37,7 +37,6 @@ public class PedidoDAO {
         return pedidos;
     }
     
-    // NUEVO MÉTODO PARA OBTENER DETALLES (PRODUCTOS) DE UN PEDIDO
     public List<DetallePedido> obtenerDetallesPorPedido(int idPedido) {
         List<DetallePedido> detalles = new ArrayList<>();
         String sql = "SELECT p.nombre, p.imagen, dp.cantidad, dp.precio_unitario, dp.subtotal " +
@@ -87,7 +86,7 @@ public class PedidoDAO {
         return pedidos;
     }
 
-    // --- MÉTODOS DASHBOARD (Sin cambios) ---
+    // --- MÉTODOS DASHBOARD ---
     public double calcularIngresosTotales() {
         double total = 0.0;
         String sql = "SELECT SUM(total) as ingresos FROM Pedidos WHERE estado != 'cancelado'";
@@ -131,61 +130,75 @@ public class PedidoDAO {
         } catch (Exception e) { e.printStackTrace(); } return total;
     }
     
-    // --- MÉTODO TRANSACCIONAL ---
+    // --- MÉTODO TRANSACCIONAL (ACTUALIZADO PARA DESACTIVAR PRODUCTOS) ---
     public boolean crearPedido(Pedido pedido, List<CarritoItem> items, String direccionEnvio, String metodoPago) {
         String INSERT_DIRECCION = "INSERT INTO direcciones (id_usuario, direccion, tipo, pais) VALUES (?, ?, 'envio', 'Perú')";
         String INSERT_PEDIDO = "INSERT INTO pedidos (id_usuario, id_direccion, estado, total) VALUES (?, ?, ?, ?)";
         String INSERT_DETALLE = "INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario) VALUES (?, ?, ?, ?)";
         String UPDATE_STOCK = "UPDATE productos SET stock = stock - ? WHERE id_producto = ? AND stock >= ?"; 
+        // NUEVA QUERY: Desactiva el producto si el stock quedó en 0
+        String DEACTIVATE_PRODUCT = "UPDATE productos SET estado = 'inactivo' WHERE id_producto = ? AND stock = 0";
         String INSERT_PAGO = "INSERT INTO pagos (id_pedido, metodo_pago, monto, estado_pago) VALUES (?, ?, ?, ?)";
 
         Connection con = null;
-        PreparedStatement psDir = null, psPedido = null, psDetalle = null, psStock = null, psPago = null;
+        PreparedStatement psDir = null, psPedido = null, psDetalle = null, psStock = null, psDeactivate = null, psPago = null;
         ResultSet rsDir = null, rsPed = null;
         
         try {
             con = Conexion.getConnection();
             con.setAutoCommit(false);
             
+            // 1. Dirección
             psDir = con.prepareStatement(INSERT_DIRECCION, Statement.RETURN_GENERATED_KEYS);
             psDir.setInt(1, pedido.getId_usuario());
             psDir.setString(2, direccionEnvio);
             psDir.executeUpdate();
-            
             rsDir = psDir.getGeneratedKeys();
             int idDireccionGenerada = 0;
             if (rsDir.next()) idDireccionGenerada = rsDir.getInt(1);
-            else throw new SQLException("No se pudo registrar dirección");
+            else throw new SQLException("No se pudo registrar la dirección de envío.");
 
+            // 2. Pedido
             psPedido = con.prepareStatement(INSERT_PEDIDO, Statement.RETURN_GENERATED_KEYS);
             psPedido.setInt(1, pedido.getId_usuario());
             psPedido.setInt(2, idDireccionGenerada);
             psPedido.setString(3, "pagado"); 
             psPedido.setBigDecimal(4, pedido.getTotal());
             psPedido.executeUpdate();
-            
             rsPed = psPedido.getGeneratedKeys();
             int idPedido = 0;
             if (rsPed.next()) { idPedido = rsPed.getInt(1); pedido.setId_pedido(idPedido); }
-            else throw new SQLException("No se pudo generar ID pedido");
+            else throw new SQLException("No se pudo generar el ID del pedido.");
             
+            // 3. Detalles y Stock
             psDetalle = con.prepareStatement(INSERT_DETALLE);
             psStock = con.prepareStatement(UPDATE_STOCK);
+            psDeactivate = con.prepareStatement(DEACTIVATE_PRODUCT);
 
             for (CarritoItem item : items) {
-                psStock.setInt(1, item.getCantidad());
-                psStock.setInt(2, item.getProducto().getId_producto());
-                psStock.setInt(3, item.getCantidad());
-                if (psStock.executeUpdate() == 0) throw new SQLException("Stock insuficiente: " + item.getProducto().getId_producto());
+                int idProducto = item.getProducto().getId_producto();
+                int cantidad = item.getCantidad();
 
+                // Actualizar stock
+                psStock.setInt(1, cantidad);
+                psStock.setInt(2, idProducto);
+                psStock.setInt(3, cantidad);
+                if (psStock.executeUpdate() == 0) throw new SQLException("Stock insuficiente para el producto ID: " + idProducto);
+
+                // Verificar si quedó en 0 y desactivar
+                psDeactivate.setInt(1, idProducto);
+                psDeactivate.executeUpdate(); // Si no está en 0, no pasa nada
+
+                // Insertar detalle
                 psDetalle.setInt(1, idPedido);
-                psDetalle.setInt(2, item.getProducto().getId_producto());
-                psDetalle.setInt(3, item.getCantidad());
+                psDetalle.setInt(2, idProducto);
+                psDetalle.setInt(3, cantidad);
                 psDetalle.setBigDecimal(4, item.getProducto().getPrecio());
                 psDetalle.addBatch();
             }
             psDetalle.executeBatch();
 
+            // 4. Pago
             psPago = con.prepareStatement(INSERT_PAGO);
             psPago.setInt(1, idPedido);
             psPago.setString(2, metodoPago);
@@ -200,7 +213,17 @@ public class PedidoDAO {
             System.err.println("Error pedido: " + e.getMessage());
             return false;
         } finally {
-            try { if (con != null) con.close(); } catch (SQLException e) {}
+            try {
+                if (rsDir != null) rsDir.close();
+                if (rsPed != null) rsPed.close();
+                if (psDir != null) psDir.close();
+                if (psPedido != null) psPedido.close();
+                if (psDetalle != null) psDetalle.close();
+                if (psStock != null) psStock.close();
+                if (psDeactivate != null) psDeactivate.close();
+                if (psPago != null) psPago.close();
+                if (con != null) con.close();
+            } catch (SQLException e) { e.printStackTrace(); }
         }
     }
 }

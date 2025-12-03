@@ -3,6 +3,8 @@ package model;
 public class Categoria {
     private int id_categoria;
     private String nombre_categoria;
+    private String Descripcion;
+
 
     // Getters y Setters
     public int getId_categoria() {
@@ -20,4 +22,14 @@ public class Categoria {
     public void setNombre_categoria(String nombre_categoria) {
         this.nombre_categoria = nombre_categoria;
     }
+
+    public String getDescripcion() {
+        return Descripcion;
+    }
+
+    public void setDescripcion(String Descripcion) {
+        this.Descripcion = Descripcion;
+    }
+    
+    
 }
